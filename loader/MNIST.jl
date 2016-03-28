@@ -3,7 +3,6 @@ module MNIST
 export MNISTData, MNIST_loaddata
 
 # info and files at http://yann.lecun.com/exdb/mnist/
-
 TEST_DATA = "data/t10k-images.idx3-ubyte"
 TEST_LABELS = "data/t10k-labels.idx1-ubyte"
 TRAINING_DATA = "data/train-images.idx3-ubyte"
@@ -14,7 +13,6 @@ MNIST_DATA_FILE_MAGIC_NUMBER = 2051
 
 MNISTIMAGE_WIDTH = 28
 MNISTIMAGE_HEIGHT = 28
-
 
 type MNISTData
 	LABEL_MAGICNUMBER::Int32
