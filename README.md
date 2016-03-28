@@ -10,7 +10,7 @@ A Julia module for loading/containing the MNIST dataset.
 Usage
 -----
 
-The user must first download the MNIST data files from http://yann.lecun.com/exdb/mnist/ and place them in the data directory of this module.
+The user must first download the MNIST data files from http://yann.lecun.com/exdb/mnist/ and place them in the data directory.
 
 To use the module in your code:
 
