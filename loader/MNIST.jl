@@ -1,6 +1,6 @@
 module MNIST
 
-export MNISTData
+export MNISTData, load_testdata
 
 TEST_DATA = "data/t10k-images.idx3-ubyte"
 TEST_LABELS = ""
@@ -57,25 +57,24 @@ function load_testdata(data::MNISTData)
 			return nothing
 		end
 
-		data_size = flip(read(datafile, UInt32))
-		data.testsize = data_size
+		data.testsize = flip(read(datafile, UInt32))
+		data.IMG_HEIGHT = flip(read(datafile, UInt32))
+		data.IMG_WIDTH = flip(read(datafile, UInt32))
+	
+		data.testdata = Array(Float64, data.IMG_WIDTH * data.IMG_HEIGHT, data.testsize)
 
-		data.testdata = Array(Float64, MNISTIMAGE_WIDTH * MNISTIMAGE_HEIGHT, data_size)
-
-		for i = 1:Int64(data_size)
-			for j = 1:(MNISTIMAGE_WIDTH*MNISTIMAGE_HEIGHT)
+		for i = 1:data.testsize
+			for j = 1:(data.IMG_WIDTH*data.IMG_HEIGHT)
 				byte = read(datafile, UInt8)
 
 				if byte != 0
 					flip(byte)
 				end
 
-				#stupid ordering
 				data.testdata[j,i] = byte
 			end
 		end
 	end
 end 
-
 
 end
