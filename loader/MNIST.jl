@@ -21,11 +21,11 @@ type MNISTData
 	IMG_HEIGHT::Int32
 
 	trainingsize::Int32
-	trainingdata::Matrix{Float64}
+	trainingdata::SparseMatrixCSC{Float64, Int64}
 	traininglabel::Vector{Int8}
 
 	testsize::Int32
-	testdata::Matrix{Float64}	
+	testdata::SparseMatrixCSC{Float64, Int64}	
 	testlabel::Vector{Int8}
 
 	MNISTData() = new(	MNIST_LABEL_FILE_MAGIC_NUMBER, 
@@ -34,20 +34,20 @@ type MNISTData
 						MNISTIMAGE_HEIGHT, 
 						0, 
 						Matrix(0,0),
-						[], 
+						Vector(0), 
 						0, 
 						Matrix(0,0),
-						[]		)
+						Vector(0)		)
 end
 
-#flip the endianness of a number
+# Flip the endianness of a 32 bit unsigned integer
 flip(x) = ((x << 24) | ((x & 0xff00) << 8) | ((x >> 8) & 0xff00) | (x >> 24))
 
 function MNIST_loaddata(data::MNISTData)
-	load_trainingdata(data)
-	load_traininglabels(data)
+ 	load_trainingdata(data)
+	#load_traininglabels(data)
 	load_testdata(data)
-	load_testlabels(data)
+	#load_testlabels(data)
 end
 
 #Function loads MNIST training data from TRAINING_DATA into data.trainingdata
@@ -70,9 +70,10 @@ function load_trainingdata(data::MNISTData)
 		data.IMG_HEIGHT = flip(read(datafile, UInt32))
 		data.IMG_WIDTH = flip(read(datafile, UInt32))
 	
-		data.trainingdata = Array(Float64, data.IMG_WIDTH * data.IMG_HEIGHT, data.trainingsize)
+		dense_trainingdata = Array(Float64, data.IMG_WIDTH * data.IMG_HEIGHT, data.trainingsize)
+		load_data( datafile, dense_trainingdata )
 
-		load_data( datafile, data.trainingdata )
+		data.trainingdata = sparse( dense_trainingdata )
 	end
 end
 
@@ -92,13 +93,14 @@ function load_testdata(data::MNISTData)
 			return 
 		end
 
-		data.testsize = flip(read(datafile, UInt32))
+		data.testsize = flip(read(datafile,UInt32))
 		data.IMG_HEIGHT = flip(read(datafile, UInt32))
 		data.IMG_WIDTH = flip(read(datafile, UInt32))
 	
-		data.testdata = Array(Float64, data.IMG_WIDTH * data.IMG_HEIGHT, data.testsize)
+		dense_testdata = Array(Float64, data.IMG_WIDTH * data.IMG_HEIGHT, data.testsize)
+		load_data( datafile, dense_testdata )
 
-		load_data( datafile, data.testdata )
+		data.testdata = sparse( dense_testdata )
 	end
 end 
 
@@ -106,11 +108,7 @@ end
 function load_data( datafile::IOStream, matrix::Matrix{Float64} )
 	for i = 1:size(matrix, 2)
 		for j = 1:size(matrix, 1)
-			byte = read(datafile, UInt8)
-			if byte != 0
-				flip(byte)
-			end
-			matrix[j,i] = byte
+			matrix[j,i] = read(datafile, UInt8)
 		end
 	end
 end
@@ -168,11 +166,7 @@ end
 # For loading solution vector from label files
 function load_labels( datafile::IOStream , vector::Vector{Int8} )
 	for i = 1:size(vector,1)
-		byte = read(datafile, UInt8)
-		if byte != 0
-			flip(byte)
-		end
-		vector[i] = byte
+		vector[i] = read(datafile, UInt8)
 	end
 end
 
