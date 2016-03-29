@@ -1,6 +1,6 @@
 module MNIST
 
-export MNIST_getdata
+export MNIST_getdata, MNIST_iscomplete
 
 # info and files at http://yann.lecun.com/exdb/mnist/
 TEST_DATA = "data/t10k-images.idx3-ubyte"
