@@ -45,55 +45,53 @@ flip(x) = ((x << 24) | ((x & 0xff00) << 8) | ((x >> 8) & 0xff00) | (x >> 24))
 
 function MNIST_loaddata( data::MNISTData )
 	load_data(data, TRAINING_DATA)
-	load_traininglabels( data )
+	load_labels( data, TRAINING_LABELS )
 	load_data(data, TEST_DATA)
-	load_testlabels( data )
+	load_labels( data, TEST_LABELS )
 end
 
 #Function loads MNIST training data from TEST_DATA into data.testdata
 # where data.testdata is a Matrix
 function load_data( data::MNISTData, filename::ASCIIString )
-	if !isfile( filename ) 
-		if filename == TRAINING_DATA 
-			println("[Julia-MNIST] Could not locate training data file. Training data not loaded.")
-		elseif filename == TEST_DATA
-			println("[Julia-MNIST] Could not locate test data file. Test data not loaded.") 
-		else
-			println("[Julia-MNIST] Could not locate specified file. Data not loaded")
-		end
-		return
-	end
-
-	open( filename ) do datafile
-		if filename == TRAINING_DATA
-			println("[Julia-MNIST] Loading training data...")
-		elseif filename == TEST_DATA
-			println("[Julia-MNIST] Loading test data...")
-		else 
-			println("[Julia-MNIST] Loading data...")
+	if filename == TEST_DATA || filename == TRAINING_DATA
+		if !isfile( filename ) 
+			if filename == TRAINING_DATA 
+				println("[Julia-MNIST] Could not locate training data file. Training data not loaded.")
+			elseif filename == TEST_DATA
+				println("[Julia-MNIST] Could not locate test data file. Test data not loaded.") 
+			end
+			return
 		end
 
-		if data.DATA_MAGICNUMBER != flip( read(datafile, UInt32) )
-			println("[Julia-MNIST] !!ERROR!! Format error detected in data file. Ensure file is valid.")
-			return 
-		end
+		open( filename ) do datafile
+			if filename == TRAINING_DATA
+				println("[Julia-MNIST] Loading training data...")
+			elseif filename == TEST_DATA
+				println("[Julia-MNIST] Loading test data...")
+			end
 
-		if filename == TRAINING_DATA
-			datasize = data.trainingsize = flip( read(datafile,UInt32) )
-		elseif filename == TEST_DATA
-			datasize = data.testsize = flip( read(datafile,UInt32) )
-		end
+			if data.DATA_MAGICNUMBER != flip( read(datafile, UInt32) )
+				println("[Julia-MNIST] !!ERROR!! Format error detected in data file. Ensure file is valid.")
+				return 
+			end
 
-		data.IMG_HEIGHT = flip( read(datafile, UInt32) )
-		data.IMG_WIDTH = flip( read(datafile, UInt32) )
-	
-		dense_data = Array(Float64, data.IMG_WIDTH * data.IMG_HEIGHT, datasize)
-		read_densedata( datafile, dense_data )
+			if filename == TRAINING_DATA
+				datasize = data.trainingsize = flip( read(datafile,UInt32) )
+			elseif filename == TEST_DATA
+				datasize = data.testsize = flip( read(datafile,UInt32) )
+			end
 
-		if filename == TRAINING_DATA
-			data.trainingdata = sparse( dense_data )
-		elseif filename == TEST_DATA
-			data.testdata = sparse( dense_data )
+			data.IMG_HEIGHT = flip( read(datafile, UInt32) )
+			data.IMG_WIDTH = flip( read(datafile, UInt32) )
+		
+			dense_data = Array(Float64, data.IMG_WIDTH * data.IMG_HEIGHT, datasize)
+			read_densedata( datafile, dense_data )
+
+			if filename == TRAINING_DATA
+				data.trainingdata = sparse( dense_data )
+			elseif filename == TEST_DATA
+				data.testdata = sparse( dense_data )
+			end
 		end
 	end
 end 
@@ -108,57 +106,52 @@ function read_densedata( datafile::IOStream, matrix::Matrix{Float64} )
 end
 
 #Function loads the solutions to the training data set into the MNISTData container
-function load_traininglabels(data::MNISTData)
-	if !isfile(TRAINING_LABELS)
-		println("[Julia-MNIST] Could not locate training label file. Training labels not loaded.")
-		return
-	end
-
-	open(TRAINING_LABELS) do datafile
-		println("[Julia-MNIST] Loading training labels (solutions)...")
-
-		if data.LABEL_MAGICNUMBER != flip(read(datafile, UInt32))
-			println("[Julia-MNIST] !!ERROR!! Format error detected in training label file. Ensure data file is valid.")
-			return 
+function load_labels(data::MNISTData, filename::ASCIIString )
+	if filename == TEST_LABELS || filename == TRAINING_LABELS
+		if !isfile( filename )
+			if filename == TRAINING_LABELS
+				println("[Julia-MNIST] Could not locate training label file. Training labels not loaded.")
+			elseif filename == TEST_LABELS
+				println("[Julia-MNIST] Could not locate test label file. Test labels not loaded.") 
+			end
+			return
 		end
 
-		# If the number of data records matches the number of solutions...
-		#  ie. making sure every image has a solution
-		if data.trainingsize == flip(read(datafile, UInt32))
-			data.traininglabel = Array(Int8, data.trainingsize)
-			load_labels( datafile, data.traininglabel )
-		else
-			println("[Julia-MNIST] !!ERROR!! Training set data size does not correspond to solution set size.")
-		end
-	end
-end
+		open( filename ) do datafile
+			if filename == TRAINING_LABELS
+				println("[Julia-MNIST] Loading training labels...")
+			elseif filename == TEST_LABELS
+				println("[Julia-MNIST] Loading test labels...")
+			end
 
-#Function loads the solutions to the test data set into the MNISTData container
-function load_testlabels(data::MNISTData)
-	if !isfile(TEST_LABELS)
-		println("[Julia-MNIST] Could not locate test label file. Test labels not loaded.")
-		return
-	end
+			if data.LABEL_MAGICNUMBER != flip(read(datafile, UInt32))
+				println("[Julia-MNIST] !!ERROR!! Format error detected in training label file. Ensure data file is valid.")
+				return 
+			end
 
-	open(TEST_LABELS) do datafile
-		println("[Julia-MNIST] Loading test labels (solutions)...")
+			if filename == TRAINING_LABELS
+				samesize = ( data.trainingsize == flip( read(datafile, UInt32) ) )
+			elseif filename == TEST_LABELS
+				samesize = ( data.testsize == flip( read(datafile, UInt32) ) )
+			end
 
-		if data.LABEL_MAGICNUMBER != flip(read(datafile, UInt32))
-			println("[Julia-MNIST] !!ERROR!! Format error detected in test label file. Ensure data file is valid.")
-			return 
-		end
-
-		if data.testsize == flip(read(datafile, UInt32))
-			data.testlabel = Array(Int8, data.testsize)
-			load_labels( datafile, data.testlabel )
-		else
-			println("[Julia-MNIST] !!ERROR!! Test set data size does not correspond to solution set size.")
+			if samesize 
+				if filename == TRAINING_LABELS
+					data.traininglabel = Array(Int8, data.trainingsize)
+					read_labelvector( datafile, data.traininglabel )
+				elseif filename == TEST_LABELS
+					data.testlabel = Array(Int8, data.testsize)
+					read_labelvector( datafile, data.testlabel )
+				end
+			else
+				println("[Julia-MNIST] !!ERROR!! Data set size does not match solution set size.  Labels not loaded.")
+			end
 		end
 	end
 end
 
 # For loading solution vector from label files
-function load_labels( datafile::IOStream , vector::Vector{Int8} )
+function read_labelvector( datafile::IOStream , vector::Vector{Int8} )
 	for i = 1:size(vector,1)
 		vector[i] = read(datafile, UInt8)
 	end
