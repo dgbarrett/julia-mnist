@@ -5,7 +5,7 @@ export MNISTData, MNIST_loaddata
 # info and files at http://yann.lecun.com/exdb/mnist/
 TEST_DATA = "data/t10k-images.idx3-ubyte"
 TEST_LABELS = "data/t10k-labels.idx1-ubyte"
-TRAINING_DATA = "data/train-images.idx3-ubyte"
+TRAINING_DATA = "data/tran-images.idx3-ubyte"
 TRAINING_LABELS = "data/train-labels.idx1-ubyte"
 
 MNIST_LABEL_FILE_MAGIC_NUMBER = 2049
@@ -44,10 +44,31 @@ end
 flip(x) = ((x << 24) | ((x & 0xff00) << 8) | ((x >> 8) & 0xff00) | (x >> 24))
 
 function MNIST_loaddata( data::MNISTData )
-	load_data(data, TRAINING_DATA)
-	load_labels( data, TRAINING_LABELS )
-	load_data(data, TEST_DATA)
-	load_labels( data, TEST_LABELS )
+	println("")
+	lflag = dflag = false
+	if load_data(data, TRAINING_DATA) 
+		println("[Julia-MNIST] Training data loaded.")
+		if load_labels( data, TRAINING_LABELS )
+			println("[Julia-MNIST] Training labels loaded.")
+			dflag = true
+		end
+	else
+		println("[Julia-MNIST] ^^ Skipping loading of training labels. Training labels not loaded.")
+	end
+
+	if load_data(data, TEST_DATA)
+		println("[Julia-MNIST] Test data loaded.")
+		if load_labels( data, TEST_LABELS )
+			println("[Julia-MNIST] Test labels loaded.")
+			lflag = true
+		end
+	else
+		println("[Julia-MNIST] ^^ Skipping loading of test labels. Test labels not loaded.")
+	end
+
+	(dflag && lflag) ? println("\n[Julia-MNIST] All data and labels loaded successfully.") : println("\n[Julia-MNIST] Incomplete loading. Dataset not complete.")
+
+
 end
 
 #Function loads MNIST training data from TEST_DATA into data.testdata
@@ -60,7 +81,7 @@ function load_data( data::MNISTData, filename::ASCIIString )
 			elseif filename == TEST_DATA
 				println("[Julia-MNIST] Could not locate test data file. Test data not loaded.") 
 			end
-			return
+			return false
 		end
 
 		open( filename ) do datafile
@@ -72,7 +93,7 @@ function load_data( data::MNISTData, filename::ASCIIString )
 
 			if data.DATA_MAGICNUMBER != flip( read(datafile, UInt32) )
 				println("[Julia-MNIST] !!ERROR!! Format error detected in data file. Ensure file is valid.")
-				return 
+				return false
 			end
 
 			if filename == TRAINING_DATA
@@ -92,7 +113,11 @@ function load_data( data::MNISTData, filename::ASCIIString )
 			elseif filename == TEST_DATA
 				data.testdata = sparse( dense_data )
 			end
+			return true
 		end
+	else
+		println("[Julia-MNIST] Data filename does not match any path specified in MNIST.jl. Specify incoming path names in MNIST.jl.")
+		return false
 	end
 end 
 
@@ -114,7 +139,7 @@ function load_labels(data::MNISTData, filename::ASCIIString )
 			elseif filename == TEST_LABELS
 				println("[Julia-MNIST] Could not locate test label file. Test labels not loaded.") 
 			end
-			return
+			return false
 		end
 
 		open( filename ) do datafile
@@ -126,7 +151,7 @@ function load_labels(data::MNISTData, filename::ASCIIString )
 
 			if data.LABEL_MAGICNUMBER != flip(read(datafile, UInt32))
 				println("[Julia-MNIST] !!ERROR!! Format error detected in training label file. Ensure data file is valid.")
-				return 
+				return false
 			end
 
 			if filename == TRAINING_LABELS
@@ -143,10 +168,15 @@ function load_labels(data::MNISTData, filename::ASCIIString )
 					data.testlabel = Array(Int8, data.testsize)
 					read_labelvector( datafile, data.testlabel )
 				end
+				return true
 			else
 				println("[Julia-MNIST] !!ERROR!! Data set size does not match solution set size.  Labels not loaded.")
+				return false
 			end
 		end
+	else
+		println("[Julia-MNIST] Label filename does not match any path specified in MNIST.jl. Specify incoming path names in MNIST.jl.")
+		return false
 	end
 end
 
