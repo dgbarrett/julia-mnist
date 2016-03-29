@@ -9,7 +9,12 @@ TRAINING_DATA = "data/train-images.idx3-ubyte"
 TRAINING_LABELS = "data/train-labels.idx1-ubyte"
 
 LABEL_MAGICNUMBER = 2049
+LABEL_MAX = 9
+LABEL_MIN = 0
+
 DATA_MAGICNUMBER = 2051
+DATA_MAX = 255
+DATA_MIN = 0
 
 MNISTIMAGE_WIDTH = 28
 MNISTIMAGE_HEIGHT = 28
@@ -73,8 +78,6 @@ function MNIST_loaddata( data::MNISTData )
 	(dflag && lflag) ? 
 		println("\n[Julia-MNIST] All data and labels loaded successfully.") : 
 		println("\n[Julia-MNIST] Incomplete loading. Dataset not complete.")
-
-
 end
 
 #=
@@ -86,7 +89,8 @@ end
 		false
 			Passed filename is not TEST_DATA or TRAINING DATA.
 			Filename is not a file.
-			Magic number read from file does not match DATA_MAGICNUMBER
+			Magic number read from file does not match DATA_MAGICNUMBER.
+			Data file contains out of bounds value (not in (DATA_MIN:DATA_MAX)).
 =#
 function load_data( data::MNISTData, filename::ASCIIString )
 	if filename == TEST_DATA || filename == TRAINING_DATA
@@ -121,7 +125,11 @@ function load_data( data::MNISTData, filename::ASCIIString )
 			MNISTIMAGE_WIDTH = flip( read(datafile, UInt32) )
 		
 			dense_data = Array(Float64, MNISTIMAGE_HEIGHT * MNISTIMAGE_WIDTH, datasize)
-			read_densedata( datafile, dense_data )
+
+			if !read_densedata( datafile, dense_data )
+				println("[Julia-MNIST]  !!ERROR!! Data file contains out of bounds values.")
+				return false
+			end
 
 			if filename == TRAINING_DATA
 				data.trainingdata = sparse( dense_data )
@@ -144,9 +152,11 @@ end
 function read_densedata( datafile::IOStream, matrix::Matrix{Float64} )
 	for i = 1:size(matrix, 2)
 		for j = 1:size(matrix, 1)
-			matrix[j,i] = read(datafile, UInt8)
+			byte = read(datafile, UInt8)
+			( byte in (DATA_MIN:DATA_MAX) ? matrix[j,i] = byte : return false)
 		end
 	end
+	return true
 end
 
 #=
@@ -159,7 +169,8 @@ end
 		false
 			Passed filename is not TEST_LABELS or TRAINING_LABELS.
 			Filename is not a file.
-			Magic number read from file does not match LABEL_MAGICNUMBER
+			Magic number read from file does not match LABEL_MAGICNUMBER.
+			Label file contains out of bounds value (not in (LABEL_MIN:LABEL_MAX)).
 =#
 function load_labels(data::MNISTData, filename::ASCIIString )
 	if filename == TEST_LABELS || filename == TRAINING_LABELS
@@ -191,12 +202,21 @@ function load_labels(data::MNISTData, filename::ASCIIString )
 			end
 
 			if samesize 
+				lflag = false
 				if filename == TRAINING_LABELS
 					data.traininglabel = Array(Int8, data.trainingsize)
-					read_labelvector( datafile, data.traininglabel )
+					if !read_labelvector( datafile, data.traininglabel )
+						data.traininglabel = Array(Int8, 0)
+						println("[Julia-MNIST]  !!ERROR!! Training label file contains out of bounds values.")
+						return false
+					end
 				elseif filename == TEST_LABELS
 					data.testlabel = Array(Int8, data.testsize)
-					read_labelvector( datafile, data.testlabel )
+					if !read_labelvector( datafile, data.testlabel )
+						data.testlabel = Array(Int8, 0)
+						println("[Julia-MNIST]  !!ERROR!! Test label file contains out of bounds values.")
+						return false
+					end
 				end
 				return true
 			else
@@ -218,7 +238,7 @@ end
 function read_labelvector( datafile::IOStream , vector::Vector{Int8} )
 	for i = 1:size(vector,1)
 		byte = read(datafile, UInt8)
-		( byte in (0:9) ) ? vector[i] = byte : return false
+		( byte in (LABEL_MIN:LABEL_MAX) ) ? vector[i] = byte : return false
 	end
 	return true
 end
