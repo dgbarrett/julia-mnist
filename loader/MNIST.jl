@@ -58,6 +58,8 @@ function load_data( data::MNISTData, filename::ASCIIString )
 			println("[Julia-MNIST] Could not locate training data file. Training data not loaded.")
 		elseif filename == TEST_DATA
 			println("[Julia-MNIST] Could not locate test data file. Test data not loaded.") 
+		else
+			println("[Julia-MNIST] Could not locate specified file. Data not loaded")
 		end
 		return
 	end
@@ -67,6 +69,8 @@ function load_data( data::MNISTData, filename::ASCIIString )
 			println("[Julia-MNIST] Loading training data...")
 		elseif filename == TEST_DATA
 			println("[Julia-MNIST] Loading test data...")
+		else 
+			println("[Julia-MNIST] Loading data...")
 		end
 
 		if data.DATA_MAGICNUMBER != flip( read(datafile, UInt32) )
