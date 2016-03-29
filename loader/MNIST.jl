@@ -44,68 +44,58 @@ end
 flip(x) = ((x << 24) | ((x & 0xff00) << 8) | ((x >> 8) & 0xff00) | (x >> 24))
 
 function MNIST_loaddata( data::MNISTData )
- 	load_trainingdata( data )
+	load_data(data, TRAINING_DATA)
 	load_traininglabels( data )
-	load_testdata( data )
+	load_data(data, TEST_DATA)
 	load_testlabels( data )
-end
-
-#Function loads MNIST training data from TRAINING_DATA into data.trainingdata
-# where data.trainingdata is a Matrix
-function load_trainingdata( data::MNISTData )
-	if !isfile( TRAINING_DATA ) 
-		println("[Julia-MNIST] !!ERROR!! Could not locate training data file. Training data not loaded.")
-		return 
-	end
-
-	open(TRAINING_DATA) do datafile
-		println("[Julia-MNIST] Loading training data...")
-
-		if data.DATA_MAGICNUMBER != flip( read(datafile, UInt32) )
-			println("[Julia-MNIST] !!ERROR!! Format error detected in training data file. Ensure data file is valid.")
-			return 
-		end
-
-		data.trainingsize = flip( read(datafile, UInt32) )
-		data.IMG_HEIGHT = flip( read(datafile, UInt32) )
-		data.IMG_WIDTH = flip( read(datafile, UInt32) )
-	
-		dense_trainingdata = Array(Float64, data.IMG_WIDTH * data.IMG_HEIGHT, data.trainingsize)
-		load_data( datafile, dense_trainingdata )
-
-		data.trainingdata = sparse( dense_trainingdata )
-	end
 end
 
 #Function loads MNIST training data from TEST_DATA into data.testdata
 # where data.testdata is a Matrix
-function load_testdata( data::MNISTData )
-	if !isfile( TEST_DATA ) 
-		println("[Julia-MNIST] Could not locate test data file. Test data not loaded.")
+function load_data( data::MNISTData, filename::ASCIIString )
+	if !isfile( filename ) 
+		if filename == TRAINING_DATA 
+			println("[Julia-MNIST] Could not locate training data file. Training data not loaded.")
+		elseif filename == TEST_DATA
+			println("[Julia-MNIST] Could not locate test data file. Test data not loaded.") 
+		end
 		return
 	end
 
-	open( TEST_DATA ) do datafile
-		println("[Julia-MNIST] Loading test data...")
+	open( filename ) do datafile
+		if filename == TRAINING_DATA
+			println("[Julia-MNIST] Loading training data...")
+		elseif filename == TEST_DATA
+			println("[Julia-MNIST] Loading test data...")
+		end
 
 		if data.DATA_MAGICNUMBER != flip( read(datafile, UInt32) )
-			println("[Julia-MNIST] !!ERROR!! Format error detected in test data file. Ensure data file is valid.")
+			println("[Julia-MNIST] !!ERROR!! Format error detected in data file. Ensure file is valid.")
 			return 
 		end
 
-		data.testsize = flip( read(datafile,UInt32) )
+		if filename == TRAINING_DATA
+			datasize = data.trainingsize = flip( read(datafile,UInt32) )
+		elseif filename == TEST_DATA
+			datasize = data.testsize = flip( read(datafile,UInt32) )
+		end
+
 		data.IMG_HEIGHT = flip( read(datafile, UInt32) )
 		data.IMG_WIDTH = flip( read(datafile, UInt32) )
 	
-		dense_testdata = Array(Float64, data.IMG_WIDTH * data.IMG_HEIGHT, data.testsize)
-		load_data( datafile, dense_testdata )
+		dense_data = Array(Float64, data.IMG_WIDTH * data.IMG_HEIGHT, datasize)
+		read_densedata( datafile, dense_data )
 
-		data.testdata = sparse( dense_testdata )
+		if filename == TRAINING_DATA
+			data.trainingdata = sparse( dense_data )
+		elseif filename == TEST_DATA
+			data.testdata = sparse( dense_data )
+		end
 	end
 end 
 
 # For loading pixel matricies from data files
-function load_data( datafile::IOStream, matrix::Matrix{Float64} )
+function read_densedata( datafile::IOStream, matrix::Matrix{Float64} )
 	for i = 1:size(matrix, 2)
 		for j = 1:size(matrix, 1)
 			matrix[j,i] = read(datafile, UInt8)
