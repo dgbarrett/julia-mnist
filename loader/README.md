@@ -22,7 +22,8 @@ testsize::Int32
 ```julia
 trainingdata::SparseMatrixCSC{Float64, Int64}
 #= 
-	Sparse (MNISTIMAGE_HEIGHT * MNISTIMAGE_WIDTH) by trainingsize (784x60000 default) matrix holding training images as column vectors.
+	Sparse (MNISTIMAGE_HEIGHT * MNISTIMAGE_WIDTH) by trainingsize (784x60000 default) matrix 
+	holding training images as column vectors.
 	** Sparse matricies are accessed like any other matrix type in Julia.
 =#
 ```
@@ -30,29 +31,34 @@ trainingdata::SparseMatrixCSC{Float64, Int64}
 ```julia
 testdata::SparseMatrixCSC{Float64, Int64}
 #= 
-	Sparse (MNISTIMAGE_HEIGHT * MNISTIMAGE_WIDTH) by testsize (784x10000 default) matrix holding test images as column vectors.
+	Sparse (MNISTIMAGE_HEIGHT * MNISTIMAGE_WIDTH) by testsize (784x10000 default) matrix holding
+	 test images as column vectors.
 =#
 ```
 
 ```julia
 traininglabel::Vector{Int8}
 #= 
-	Solutions to trainingdata.  traininglabel[i] corresponds to the solution for column vector i in trainingdata.
+	Solutions to trainingdata.  traininglabel[i] corresponds to the solution for column vector i
+	 in trainingdata.
 =#
 ```
 
 ```julia
 testlabel::Vector{Int8}
 #= 
-	Solutions to testdata.  testlabel[i] corresponds to the solution for column vector i in testdata.
+	Solutions to testdata.  testlabel[i] corresponds to the solution for column vector i in 
+	testdata.
 =#
 ```
 
 ```julia
 completeload::Bool
 #= 
-	True if data object is completely loaded.  False if there were errors loading when loading datasets.
+	True if data object is completely loaded.  False if there were errors loading when loading 
+	datasets.
 =#
+```
 
 
 
