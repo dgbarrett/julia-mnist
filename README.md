@@ -25,3 +25,12 @@ To initialize a MNISTData object (the container type which holds the loaded data
 data = MNIST_getdata() 
 ```
 
+Testing
+-------
+
+```makefile
+make test
+```
+
+To run all tests on the module, and verify the data is parsed correctly.
+
