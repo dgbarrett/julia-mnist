@@ -14,6 +14,10 @@ DATA_MAGICNUMBER = 2051
 MNISTIMAGE_WIDTH = 28
 MNISTIMAGE_HEIGHT = 28
 
+#=
+	@type MNISTData
+		Container type for holding MNIST data and labels (solutions). 
+=#
 type MNISTData
 	trainingsize::Int32
 	trainingdata::SparseMatrixCSC{Float64, Int64}
@@ -31,11 +35,20 @@ type MNISTData
 						Vector(0)		)
 end
 
-# Flip the endianness of a 32 bit unsigned integer
-flip(x) = ((x << 24) | ((x & 0xff00) << 8) | ((x >> 8) & 0xff00) | (x >> 24))
+#=
+	@function flip
+		Reverse the byte order of a 32 bit unsigned integer.
+		Returns reversed number.
+=#
+flip(x::UInt32) = ((x << 24) | ((x & 0xff00) << 8) | ((x >> 8) & 0xff00) | (x >> 24))
 
+
+#=
+	@function MNIST_loaddata
+		Load data from the file paths specifed above by TRAINING_DATA, 
+		TRAINING_LABELS, etc.., into a MNISTData container object.
+=#
 function MNIST_loaddata( data::MNISTData )
-	println("")
 	lflag = dflag = false
 	if load_data(data, TRAINING_DATA) 
 		println("[Julia-MNIST] Training data loaded.")
@@ -57,18 +70,29 @@ function MNIST_loaddata( data::MNISTData )
 		println("[Julia-MNIST] ^^ Skipping loading of test labels. Test labels not loaded.")
 	end
 
-	(dflag && lflag) ? println("\n[Julia-MNIST] All data and labels loaded successfully.") : println("\n[Julia-MNIST] Incomplete loading. Dataset not complete.")
+	(dflag && lflag) ? 
+		println("\n[Julia-MNIST] All data and labels loaded successfully.") : 
+		println("\n[Julia-MNIST] Incomplete loading. Dataset not complete.")
 
 
 end
 
-#Function loads MNIST training data from TEST_DATA into data.testdata
-# where data.testdata is a Matrix
+#=
+	@function load_data
+		Load MNIST data from the data file specifed by filename.
+	@return
+		true
+			Data successfully parsed from filename.
+		false
+			Passed filename is not TEST_DATA or TRAINING DATA.
+			Filename is not a file.
+			Magic number read from file does not match DATA_MAGICNUMBER
+=#
 function load_data( data::MNISTData, filename::ASCIIString )
 	if filename == TEST_DATA || filename == TRAINING_DATA
 		if !isfile( filename ) 
 			if filename == TRAINING_DATA 
-				println("[Julia-MNIST] Could not locate training data file. Training data not loaded.")
+				println("\n[Julia-MNIST] Could not locate training data file. Training data not loaded.")
 			elseif filename == TEST_DATA
 				println("[Julia-MNIST] Could not locate test data file. Test data not loaded.") 
 			end
@@ -77,7 +101,7 @@ function load_data( data::MNISTData, filename::ASCIIString )
 
 		open( filename ) do datafile
 			if filename == TRAINING_DATA
-				println("[Julia-MNIST] Loading training data...")
+				println("\n[Julia-MNIST] Loading training data...")
 			elseif filename == TEST_DATA
 				println("[Julia-MNIST] Loading test data...")
 			end
@@ -112,7 +136,11 @@ function load_data( data::MNISTData, filename::ASCIIString )
 	end
 end 
 
-# For loading pixel matricies from data files
+#=
+	@function read_densedata
+		Read MNIST formatted data from the datafile IOStream into a dense 
+		matrix (matrix).
+=#
 function read_densedata( datafile::IOStream, matrix::Matrix{Float64} )
 	for i = 1:size(matrix, 2)
 		for j = 1:size(matrix, 1)
@@ -121,7 +149,18 @@ function read_densedata( datafile::IOStream, matrix::Matrix{Float64} )
 	end
 end
 
-#Function loads the solutions to the training data set into the MNISTData container
+#=
+	@function load_labels
+		Load MNIST labels  (solutions) from the label file specifed by 
+		filename.
+	@return
+		true
+			Labels successfully parsed from filename.
+		false
+			Passed filename is not TEST_LABELS or TRAINING_LABELS.
+			Filename is not a file.
+			Magic number read from file does not match LABEL_MAGICNUMBER
+=#
 function load_labels(data::MNISTData, filename::ASCIIString )
 	if filename == TEST_LABELS || filename == TRAINING_LABELS
 		if !isfile( filename )
@@ -171,11 +210,17 @@ function load_labels(data::MNISTData, filename::ASCIIString )
 	end
 end
 
-# For loading solution vector from label files
+#=
+	@function read_label
+		Read MNIST formatted lables (solutions) from the datafile IOStream into
+		a vector (vector).
+=#
 function read_labelvector( datafile::IOStream , vector::Vector{Int8} )
 	for i = 1:size(vector,1)
-		vector[i] = read(datafile, UInt8)
+		byte = read(datafile, UInt8)
+		( byte in (0:9) ) ? vector[i] = byte : return false
 	end
+	return true
 end
 
 end
