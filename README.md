@@ -21,7 +21,7 @@ importall MNIST
 To initialize a MNISTData object (the container type which holds the loaded data) and load data into it, do the following:
 
 ```julia
-data = MNISTData()
-MNIST_loaddata(data)
+# returns loaded object of type ::MNISTData
+data = MNIST_getdata() 
 ```
 

@@ -1,6 +1,6 @@
 module MNIST
 
-export MNISTData, MNIST_loaddata
+export MNIST_getdata
 
 # info and files at http://yann.lecun.com/exdb/mnist/
 TEST_DATA = "data/t10k-images.idx3-ubyte"
@@ -32,28 +32,46 @@ type MNISTData
 	testdata::SparseMatrixCSC{Float64, Int64}	
 	testlabel::Vector{Int8}
 
+	completeload::Bool
+
 	MNISTData() = new(	0, 
 						Matrix(0,0),
 						Vector(0), 
 						0, 
 						Matrix(0,0),
-						Vector(0)		)
+						Vector(0),
+						false		)
 end
 
 #=
-	@function flip
-		Reverse the byte order of a 32 bit unsigned integer.
-		Returns reversed number.
+	@function MNIST_getdata
+		Top level function that creates, loads, and returns a MNISTData object.
 =#
-flip(x::UInt32) = ((x << 24) | ((x & 0xff00) << 8) | ((x >> 8) & 0xff00) | (x >> 24))
+function MNIST_getdata() 
+	data = MNISTData()
+	loadall_datasets( data )
+	return data
+end
 
+#= 
+	@function MNIST_iscomplete
+		Check if a MNISTData object is complete.
+	@return
+		true
+			Object contains all records.
+		false
+			Object is incompletley loaded. Records may be missing or incorrect.
+=#
+function MNIST_iscomplete( data::MNISTData )
+	return data.completeload
+end 
 
 #=
 	@function MNIST_loaddata
 		Load data from the file paths specifed above by TRAINING_DATA, 
 		TRAINING_LABELS, etc.., into a MNISTData container object.
 =#
-function MNIST_loaddata( data::MNISTData )
+function loadall_datasets( data::MNISTData )
 	lflag = dflag = false
 	if load_data(data, TRAINING_DATA) 
 		println("[Julia-MNIST] Training data loaded.")
@@ -76,7 +94,7 @@ function MNIST_loaddata( data::MNISTData )
 	end
 
 	(dflag && lflag) ? 
-		println("\n[Julia-MNIST] All data and labels loaded successfully.") : 
+		( println("\n[Julia-MNIST] All data and labels loaded successfully."); data.completeload = true;) : 
 		println("\n[Julia-MNIST] Incomplete loading. Dataset not complete.")
 end
 
@@ -90,6 +108,7 @@ end
 			Passed filename is not TEST_DATA or TRAINING DATA.
 			Filename is not a file.
 			Magic number read from file does not match DATA_MAGICNUMBER.
+			Data images are not of size MNISTIMAGE_HEIGHT x MNISTIMAGE_WIDTH
 			Data file contains out of bounds value (not in (DATA_MIN:DATA_MAX)).
 =#
 function load_data( data::MNISTData, filename::ASCIIString )
@@ -121,9 +140,11 @@ function load_data( data::MNISTData, filename::ASCIIString )
 				datasize = data.testsize = flip( read(datafile,UInt32) )
 			end
 
-			MNISTIMAGE_HEIGHT = flip( read(datafile, UInt32) )
-			MNISTIMAGE_WIDTH = flip( read(datafile, UInt32) )
-		
+			if MNISTIMAGE_HEIGHT != flip( read(datafile, UInt32) ) || MNISTIMAGE_WIDTH != flip( read(datafile, UInt32) )
+				println("[Julia-MNIST] !!ERROR!! Data image is unexpected size. Ensure data file is valid.")
+				return false
+			end
+
 			dense_data = Array(Float64, MNISTIMAGE_HEIGHT * MNISTIMAGE_WIDTH, datasize)
 
 			if !read_densedata( datafile, dense_data )
@@ -148,6 +169,11 @@ end
 	@function read_densedata
 		Read MNIST formatted data from the datafile IOStream into a dense 
 		matrix (matrix).
+	@return
+		true
+			All values in (DATA_MIN:DATA_MAX). Data is valid.
+		false
+			Values outside above specified range. Data is invalid.
 =#
 function read_densedata( datafile::IOStream, matrix::Matrix{Float64} )
 	for i = 1:size(matrix, 2)
@@ -234,6 +260,11 @@ end
 	@function read_label
 		Read MNIST formatted lables (solutions) from the datafile IOStream into
 		a vector (vector).
+	@return
+		true
+			All values in (LABEL_MIN:LABEL_MAX). Labels are valid.
+		false
+			Values outside above specified range. Labels are invalid.
 =#
 function read_labelvector( datafile::IOStream , vector::Vector{Int8} )
 	for i = 1:size(vector,1)
@@ -242,5 +273,12 @@ function read_labelvector( datafile::IOStream , vector::Vector{Int8} )
 	end
 	return true
 end
+
+#=
+	@function flip
+		Reverse the byte order of a 32 bit unsigned integer.
+		Returns reversed number.
+=#
+flip(x::UInt32) = ((x << 24) | ((x & 0xff00) << 8) | ((x >> 8) & 0xff00) | (x >> 24))
 
 end
