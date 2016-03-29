@@ -1,6 +1,6 @@
 using Base.Test
 
-include("../loader/MNIST.jl")
+include("../src/MNIST.jl")
 importall MNIST
 
 println("\nTesting data import...")
