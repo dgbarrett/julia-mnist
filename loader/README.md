@@ -65,22 +65,12 @@ completeload::Bool
 Functions
 ---------
 
-### MNIST_getdata()
-
-Return type
-```julia
-MNISTData
-```
+### MNIST_getdata() => ::MNISTData
 
 Creates and loads a MNISTData object from the file paths specified by TEST_DATA, TEST_LABELS, etc.., in MNIST.jl before returning the object to the user.  Any errors loading the data are printed to STDOUT.
 
 
-### MNIST_iscomplete( ::MNISTData )
-
-Return type
-```julia
-Bool
-```
+### MNIST_iscomplete( ::MNISTData ) => ::Bool
 
 Returns true if the MNISTData object is completley loaded and suffered no errors reading the data/labels into its internal structures.  Returns false if the data/labels are incomplete, assume the data contained in such a case is erroneous.
 
