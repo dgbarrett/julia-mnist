@@ -5,21 +5,16 @@ export MNISTData, MNIST_loaddata
 # info and files at http://yann.lecun.com/exdb/mnist/
 TEST_DATA = "data/t10k-images.idx3-ubyte"
 TEST_LABELS = "data/t10k-labels.idx1-ubyte"
-TRAINING_DATA = "data/tran-images.idx3-ubyte"
+TRAINING_DATA = "data/train-images.idx3-ubyte"
 TRAINING_LABELS = "data/train-labels.idx1-ubyte"
 
-MNIST_LABEL_FILE_MAGIC_NUMBER = 2049
-MNIST_DATA_FILE_MAGIC_NUMBER = 2051
+LABEL_MAGICNUMBER = 2049
+DATA_MAGICNUMBER = 2051
 
 MNISTIMAGE_WIDTH = 28
 MNISTIMAGE_HEIGHT = 28
 
 type MNISTData
-	LABEL_MAGICNUMBER::Int32
-	DATA_MAGICNUMBER::Int32
-	IMG_WIDTH::Int32
-	IMG_HEIGHT::Int32
-
 	trainingsize::Int32
 	trainingdata::SparseMatrixCSC{Float64, Int64}
 	traininglabel::Vector{Int8}
@@ -28,11 +23,7 @@ type MNISTData
 	testdata::SparseMatrixCSC{Float64, Int64}	
 	testlabel::Vector{Int8}
 
-	MNISTData() = new(	MNIST_LABEL_FILE_MAGIC_NUMBER, 
-						MNIST_DATA_FILE_MAGIC_NUMBER, 
-						MNISTIMAGE_WIDTH, 
-						MNISTIMAGE_HEIGHT, 
-						0, 
+	MNISTData() = new(	0, 
 						Matrix(0,0),
 						Vector(0), 
 						0, 
@@ -91,7 +82,7 @@ function load_data( data::MNISTData, filename::ASCIIString )
 				println("[Julia-MNIST] Loading test data...")
 			end
 
-			if data.DATA_MAGICNUMBER != flip( read(datafile, UInt32) )
+			if DATA_MAGICNUMBER != flip( read(datafile, UInt32) )
 				println("[Julia-MNIST] !!ERROR!! Format error detected in data file. Ensure file is valid.")
 				return false
 			end
@@ -102,10 +93,10 @@ function load_data( data::MNISTData, filename::ASCIIString )
 				datasize = data.testsize = flip( read(datafile,UInt32) )
 			end
 
-			data.IMG_HEIGHT = flip( read(datafile, UInt32) )
-			data.IMG_WIDTH = flip( read(datafile, UInt32) )
+			MNISTIMAGE_HEIGHT = flip( read(datafile, UInt32) )
+			MNISTIMAGE_WIDTH = flip( read(datafile, UInt32) )
 		
-			dense_data = Array(Float64, data.IMG_WIDTH * data.IMG_HEIGHT, datasize)
+			dense_data = Array(Float64, MNISTIMAGE_HEIGHT * MNISTIMAGE_WIDTH, datasize)
 			read_densedata( datafile, dense_data )
 
 			if filename == TRAINING_DATA
@@ -149,7 +140,7 @@ function load_labels(data::MNISTData, filename::ASCIIString )
 				println("[Julia-MNIST] Loading test labels...")
 			end
 
-			if data.LABEL_MAGICNUMBER != flip(read(datafile, UInt32))
+			if LABEL_MAGICNUMBER != flip(read(datafile, UInt32))
 				println("[Julia-MNIST] !!ERROR!! Format error detected in training label file. Ensure data file is valid.")
 				return false
 			end
