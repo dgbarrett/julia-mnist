@@ -43,6 +43,7 @@ type MNISTData
 						false		)
 end
 
+
 #=
 	@function MNIST_getdata
 		Top level function that creates, loads, and returns a MNISTData object.
@@ -52,6 +53,7 @@ function MNIST_getdata()
 	loadall_datasets( data )
 	return data
 end
+
 
 #= 
 	@function MNIST_iscomplete
@@ -65,6 +67,7 @@ end
 function MNIST_iscomplete( data::MNISTData )
 	return data.completeload
 end 
+
 
 #=
 	@function MNIST_loaddata
@@ -97,6 +100,7 @@ function loadall_datasets( data::MNISTData )
 		( println("\n[Julia-MNIST] All data and labels loaded successfully."); data.completeload = true;) : 
 		println("\n[Julia-MNIST] Incomplete loading. Dataset not complete.")
 end
+
 
 #=
 	@function load_data
@@ -165,6 +169,7 @@ function load_data( data::MNISTData, filename::ASCIIString )
 	end
 end 
 
+
 #=
 	@function read_densedata
 		Read MNIST formatted data from the datafile IOStream into a dense 
@@ -184,6 +189,7 @@ function read_densedata( datafile::IOStream, matrix::Matrix{Float64} )
 	end
 	return true
 end
+
 
 #=
 	@function load_labels
@@ -256,6 +262,7 @@ function load_labels(data::MNISTData, filename::ASCIIString )
 	end
 end
 
+
 #=
 	@function read_label
 		Read MNIST formatted lables (solutions) from the datafile IOStream into
@@ -273,6 +280,7 @@ function read_labelvector( datafile::IOStream , vector::Vector{Int8} )
 	end
 	return true
 end
+
 
 #=
 	@function flip
