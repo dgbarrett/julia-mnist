@@ -20,35 +20,32 @@ testsize::Int32
 ```
 
 ```julia
-trainingdata::SparseMatrixCSC{Float64, Int64}
+trainingdata::Array{Float64, 2}
 #= 
-	Sparse (MNISTIMAGE_HEIGHT * MNISTIMAGE_WIDTH) by trainingsize (784x60000 default) matrix 
+	(MNISTIMAGE_HEIGHT * MNISTIMAGE_WIDTH) by trainingsize (784x60000 default) array
 	holding training images as column vectors.
-	** Sparse matricies are accessed like any other matrix type in Julia.
 =#
 ```
 
 ```julia
-testdata::SparseMatrixCSC{Float64, Int64}
+testdata::Array{Float64, 2}
 #= 
-	Sparse (MNISTIMAGE_HEIGHT * MNISTIMAGE_WIDTH) by testsize (784x10000 default) matrix holding
+	(MNISTIMAGE_HEIGHT * MNISTIMAGE_WIDTH) by testsize (784x10000 default) matrix holding
 	 test images as column vectors.
 =#
 ```
 
 ```julia
-traininglabel::Vector{Int8}
+traininglabel::Array{Int64, 2}
 #= 
-	Solutions to trainingdata.  traininglabel[i] corresponds to the solution for column vector i
-	 in trainingdata.
+	Solutions to trainingdata.  Position i+1 in column vector j signifies a solution of i for image j.
 =#
 ```
 
 ```julia
-testlabel::Vector{Int8}
+testlabel::Array{Int64, 2}
 #= 
-	Solutions to testdata.  testlabel[i] corresponds to the solution for column vector i in 
-	testdata.
+	Solutions to testdata.  Position i+1 in column vector j signifies a solution of i for image j.
 =#
 ```
 

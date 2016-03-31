@@ -25,21 +25,21 @@ MNISTIMAGE_HEIGHT = 28
 =#
 type MNISTData
 	trainingsize::Int32
-	trainingdata::SparseMatrixCSC{Float64, Int64}
-	traininglabel::Vector{Int8}
+	trainingdata::Array{Float64, 2}
+	traininglabel::Array{Int64, 2}
 
 	testsize::Int32
-	testdata::SparseMatrixCSC{Float64, Int64}	
-	testlabel::Vector{Int8}
+	testdata::Array{Float64, 2}
+	testlabel::Array{Int64, 2}
 
 	completeload::Bool
 
 	MNISTData() = new(	0, 
-						Matrix(0,0),
-						Vector(0), 
+						Array(Float64,0,0),
+						Array(Int64,0,0), 
 						0, 
-						Matrix(0,0),
-						Vector(0),
+						Array(Float64,0,0),
+						Array(Int64,0,0),
 						false		)
 end
 
@@ -157,9 +157,9 @@ function load_data( data::MNISTData, filename::ASCIIString )
 			end
 
 			if filename == TRAINING_DATA
-				data.trainingdata = sparse( dense_data )
+				data.trainingdata = dense_data
 			elseif filename == TEST_DATA
-				data.testdata = sparse( dense_data )
+				data.testdata = dense_data
 			end
 			return true
 		end
@@ -236,14 +236,14 @@ function load_labels(data::MNISTData, filename::ASCIIString )
 			if samesize 
 				lflag = false
 				if filename == TRAINING_LABELS
-					data.traininglabel = Array(Int8, data.trainingsize)
+					data.traininglabel = Array(Int64, 10 , data.trainingsize)
 					if !read_labelvector( datafile, data.traininglabel )
 						data.traininglabel = Array(Int8, 0)
 						println("[Julia-MNIST]  !!ERROR!! Training label file contains out of bounds values.")
 						return false
 					end
 				elseif filename == TEST_LABELS
-					data.testlabel = Array(Int8, data.testsize)
+					data.testlabel = Array(Int64, 10, data.testsize)
 					if !read_labelvector( datafile, data.testlabel )
 						data.testlabel = Array(Int8, 0)
 						println("[Julia-MNIST]  !!ERROR!! Test label file contains out of bounds values.")
@@ -273,10 +273,10 @@ end
 		false
 			Values outside above specified range. Labels are invalid.
 =#
-function read_labelvector( datafile::IOStream , vector::Vector{Int8} )
-	for i = 1:size(vector,1)
+function read_labelvector( datafile::IOStream , vector::Array{Int64, 2} )
+	for i = 1:size(vector,2)
 		byte = read(datafile, UInt8)
-		( byte in (LABEL_MIN:LABEL_MAX) ) ? vector[i] = byte : return false
+		( byte in (LABEL_MIN:LABEL_MAX) ) ? vector[byte+1, i] = 1 : return false
 	end
 	return true
 end
