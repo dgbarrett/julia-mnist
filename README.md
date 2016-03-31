@@ -15,6 +15,7 @@ The user must first download the MNIST data files from http://yann.lecun.com/exd
 To use the module in your code:
 
 ```julia
+include("MNIST.jl")
 importall MNIST
 ```
 
